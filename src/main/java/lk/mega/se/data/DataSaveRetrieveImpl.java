@@ -2,7 +2,6 @@ package lk.mega.se.data;
 
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.image.Image;
-
 import javax.imageio.ImageIO;
 import javax.sql.rowset.serial.SerialBlob;
 import java.awt.image.BufferedImage;
@@ -40,10 +39,8 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
         }
     }
 
-
     @Override
     public void updatePatientDatabase(Image image, String name, String idNumber, String passportNumber, LocalDate birthday, String gender, Double weight, Double height, String address, ArrayList<String> contactNumbers, String email, String note) {
-        System.out.println("data come to the database");
         try {
             BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -82,7 +79,29 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     }
 
     @Override
-    public ResultSet searchPatientsId(int number) {
+    public ResultSet searchPatientsIdNumber(String searchingWord) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE id_number LIKE %s", "'"+searchingWord+"%'"));
+            return preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public ResultSet searchPatientsPassportNumber(String searchingWord) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE passport_number LIKE %s", "'"+searchingWord+"%'"));
+            return preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
+    public ResultSet searchPatientsIdNumber(int number) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE patient_number = %s", "'"+number+"%'"));
             return preparedStatement.executeQuery();
@@ -104,6 +123,26 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
             e.printStackTrace();
         }
         return 0;
+    }
+
+    @Override
+    public Image retrievePatientImage(int number) {
+        try {
+            String sql = String.format("SELECT image FROM Patient WHERE patient_number='%d' ",number);
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            resultSet.next();
+            Blob blob = resultSet.getBlob("image");
+            if (blob==null){
+                return new Image("/images/hospital.png");
+            }else {
+                Image image = new Image(blob.getBinaryStream(), 150, 150, true, true);
+                return image;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

@@ -17,7 +17,6 @@ import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 
 public class AddPatientController {
@@ -121,6 +120,48 @@ public class AddPatientController {
         for (int i = 0; i < 6; i++) {
             tblPatients.getColumns().get(i).getStyleClass().add("center");
         }
+        searchName();
+        searchIdNumber();
+        searchPassportNumber();
+//        btnNew.fire();
+    }
+
+    private void searchPassportNumber() {
+        txtPassportNumber.textProperty().addListener((observableValue, previous, current) -> {
+            System.out.println("hsdgjsd");
+            if(tblPatients.getSelectionModel().isEmpty()){
+                ResultSet resultSet = dataSaveRetrieve.searchPatientsPassportNumber(txtPassportNumber.getText());
+                tblPatients.getItems().clear();
+                try {
+                    while (resultSet.next()){
+                        Patient patient = patientSetDataFromDB(resultSet);
+                        tblPatients.getItems().add(patient);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void searchIdNumber() {
+        txtIDNumber.textProperty().addListener((observableValue, previous, current) -> {
+            if(tblPatients.getSelectionModel().isEmpty()){
+                ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(txtIDNumber.getText());
+                tblPatients.getItems().clear();
+                try {
+                    while (resultSet.next()){
+                        Patient patient = patientSetDataFromDB(resultSet);
+                        tblPatients.getItems().add(patient);
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    private void searchName(){
         txtName.textProperty().addListener((observableValue, previous, current) -> {
             if(tblPatients.getSelectionModel().isEmpty()){
                 ResultSet resultSet = dataSaveRetrieve.searchPatientsName(txtName.getText());
@@ -130,13 +171,11 @@ public class AddPatientController {
                         Patient patient = patientSetDataFromDB(resultSet);
                         tblPatients.getItems().add(patient);
                     }
-
                 } catch (SQLException e) {
                     e.printStackTrace();
                 }
             }
         });
-//        btnNew.fire();
     }
 
     private void testingData() {
@@ -394,8 +433,8 @@ public class AddPatientController {
     }
 
     private void patientGetData(Patient patient) {
-
-        imgPatient.setImage(patient.getImageView().getImage());
+        Image image = dataSaveRetrieve.retrievePatientImage(Integer.parseInt((patient.getPatientNumber().substring(1, 4))));
+        imgPatient.setImage(image);
         txtPatientNumber.setText(patient.getPatientNumber());
         txtName.setText(patient.getName());
         txtIDNumber.setText(patient.getIdNumber());
@@ -463,7 +502,7 @@ public class AddPatientController {
                 if (!Character.isDigit(chars[i])) return;
             }
             int number =Integer.parseInt(txtPatientNumber.getText().substring(1, 4)) ;
-            ResultSet resultSet = dataSaveRetrieve.searchPatientsId(number);
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(number);
             try {
                 tblPatients.getItems().clear();
                 while (resultSet.next()){
