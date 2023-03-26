@@ -101,6 +101,16 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     }
 
     @Override
+    public void deletePatient(int patientNumber) {
+        String sql = String.format("DELETE FROM Patient WHERE patient_number='%d'",patientNumber);
+        try {
+            connection.createStatement().executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public ResultSet searchPatientsIdNumber(int number) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE patient_number = %s", "'"+number+"%'"));

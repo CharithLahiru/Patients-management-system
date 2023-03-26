@@ -107,10 +107,12 @@ public class AddPatientController {
             Patient patient;
             if ((patient = tblPatients.getSelectionModel().getSelectedItem()) != null) {
                 patientGetData(patient);
+                txtPatientNumber.setEditable(false);
                 btnDelete.setDisable(false);
                 btnHistory.setDisable(false);
                 btnAdd.setDisable(false);
             } else {
+                txtPatientNumber.setEditable(true);
                 btnDelete.setDisable(true);
                 btnHistory.setDisable(true);
                 btnAdd.setDisable(true);
@@ -120,6 +122,7 @@ public class AddPatientController {
         for (int i = 0; i < 6; i++) {
             tblPatients.getColumns().get(i).getStyleClass().add("center");
         }
+        searchPatientNumber();
         searchName();
         searchIdNumber();
         searchPassportNumber();
@@ -128,7 +131,6 @@ public class AddPatientController {
 
     private void searchPassportNumber() {
         txtPassportNumber.textProperty().addListener((observableValue, previous, current) -> {
-            System.out.println("hsdgjsd");
             if(tblPatients.getSelectionModel().isEmpty()){
                 ResultSet resultSet = dataSaveRetrieve.searchPatientsPassportNumber(txtPassportNumber.getText());
                 tblPatients.getItems().clear();
@@ -178,6 +180,32 @@ public class AddPatientController {
         });
     }
 
+    private void searchPatientNumber() {
+        txtPatientNumber.textProperty().addListener((observableValue, previous, current) -> {
+            if (!tblPatients.getSelectionModel().isEmpty()) return;
+            btnSave.setDisable(false);
+            char[] chars = txtPatientNumber.getText().toCharArray();
+            if (chars.length<1) return;
+            if (chars[0]!='P') return;
+            if (chars.length!=4) return;
+            for (int i = 1; i < 4; i++) {
+                if (!Character.isDigit(chars[i])) return;
+            }
+            int number =Integer.parseInt(txtPatientNumber.getText().substring(1, 4)) ;
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(number);
+            try {
+                tblPatients.getItems().clear();
+                while (resultSet.next()){
+                    btnSave.setDisable(true);
+                    Patient patient = patientSetDataFromDB(resultSet);
+                    tblPatients.getItems().add(patient);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
     private void testingData() {
         txtName.setText("alice");
         txtIDNumber.setText("568954795V");
@@ -196,6 +224,7 @@ public class AddPatientController {
         for (TextField textField : textFields) {
             textField.clear();
         }
+        imgPatient.setImage(new Image("/images/user.png"));
         txtPatientNumber.setText(generatePatientNumber());
         txtBirthday.setValue(null);
         if (gender.getSelectedToggle()!=null)gender.getSelectedToggle().setSelected(false);
@@ -296,10 +325,19 @@ public class AddPatientController {
         btnNew.fire();
     }
 
-    private void dataRetrieve() {
-
+    public void btnDeleteOnAction(ActionEvent actionEvent) {
+        int patientNumber = Integer.parseInt(tblPatients.getSelectionModel().getSelectedItem().getPatientNumber().substring(1, 4));
+        dataSaveRetrieve.deletePatient(patientNumber);
+        tblPatients.getItems().remove(tblPatients.getSelectionModel().getSelectedIndex());
+        tblPatients.getSelectionModel().clearSelection();
+        btnNew.fire();
     }
 
+    public void btnBackOnAction(ActionEvent actionEvent) {
+        vBoxStudentsList.setVisible(true);
+        paneHistory.setVisible(false);
+        btnNew.fire();
+    }
     private boolean validateContactNumber(String number) {
         if (txtPhoneNumber.getText().trim().length() < 4) return false;
         return true;
@@ -340,6 +378,7 @@ public class AddPatientController {
         patient.setNote(txtNote.getText());
         return patient;
     }
+
     private Patient patientSetDataFromDB(ResultSet resultSet) {
         Patient patient = new Patient();
 
@@ -450,18 +489,6 @@ public class AddPatientController {
         txtNote.setText(patient.getNote());
     }
 
-    public void btnDeleteOnAction(ActionEvent actionEvent) {
-        tblPatients.getItems().remove(tblPatients.getSelectionModel().getSelectedIndex());
-        tblPatients.getSelectionModel().clearSelection();
-        btnNew.fire();
-    }
-
-    public void btnBackOnAction(ActionEvent actionEvent) {
-        vBoxStudentsList.setVisible(true);
-        paneHistory.setVisible(false);
-        btnNew.fire();
-    }
-
     private String generatePatientNumber() {
         int i = dataSaveRetrieve.lastPatientID();
         return String.format("P%03d",i+1);
@@ -492,28 +519,6 @@ public class AddPatientController {
 
     }
 
-    @FXML
-    void txtPatientNumberOnKeyReleased(KeyEvent event) {
-        if(event.getCode()== KeyCode.ENTER){
-            char[] chars = txtPatientNumber.getText().toCharArray();
-            if (chars[0]!='P') return;
-            if (chars.length!=4) return;
-            for (int i = 1; i < 4; i++) {
-                if (!Character.isDigit(chars[i])) return;
-            }
-            int number =Integer.parseInt(txtPatientNumber.getText().substring(1, 4)) ;
-            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(number);
-            try {
-                tblPatients.getItems().clear();
-                while (resultSet.next()){
-                    Patient patient = patientSetDataFromDB(resultSet);
-                    tblPatients.getItems().add(patient);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     @FXML
     void txtWeightOnKeyReleased(KeyEvent event) {

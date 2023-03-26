@@ -12,6 +12,7 @@ public interface DataSaveRetrieve {
     public ResultSet searchPatientsName(String searchingWord);
     public ResultSet searchPatientsIdNumber(String searchingWord);
     public ResultSet searchPatientsPassportNumber(String searchingWord);
+    public void deletePatient(int patientNumber);
     public int lastPatientID();
     public Image retrievePatientImage(int number);
 }

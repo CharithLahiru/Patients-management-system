@@ -24,3 +24,11 @@
     -fx-background-image : url("/images/background.jpeg");
     -fx-background-size: 250.0 920.0;
 }
+
+.button{
+    -fx-background-color: #6ba4fa;
+}
+.button:hover{
+    -fx-scale-x: 1.2;
+    -fx-scale-y: 1.2;
+}
