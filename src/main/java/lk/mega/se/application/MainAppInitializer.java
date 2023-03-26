@@ -19,6 +19,6 @@ public class MainAppInitializer extends Application {
         primaryStage.setTitle("Patients Details");
         primaryStage.centerOnScreen();
         primaryStage.show();
-        primaryStage.setMaximized(true);
+//        primaryStage.setMaximized(true);
     }
 }

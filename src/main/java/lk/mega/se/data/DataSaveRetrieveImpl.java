@@ -1,17 +1,19 @@
 package lk.mega.se.data;
 
-import lk.mega.se.application.Patient;
+import javafx.embed.swing.SwingFXUtils;
+import javafx.scene.image.Image;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import javax.imageio.ImageIO;
+import javax.sql.rowset.serial.SerialBlob;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class DataSaveRetrieveImpl implements DataSaveRetrieve {
+
+    Connection connection = DBConnection.getInstance().getConnection();
 
     public DataSaveRetrieveImpl() {
         generateTables();
@@ -19,7 +21,6 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
 
     private void generateTables() {
         try {
-            Connection connection = DBConnection.getInstance().getConnection();
             Statement statement = connection.createStatement();
             ResultSet rst = statement.executeQuery("SHOW TABLES");
             if (!rst.next()) {
@@ -39,16 +40,70 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
         }
     }
 
+
     @Override
-    public Patient searchPatient() {
-        System.out.println("Return a patient");
+    public void updatePatientDatabase(Image image, String name, String idNumber, String passportNumber, LocalDate birthday, String gender, Double weight, Double height, String address, ArrayList<String> contactNumbers, String email, String note) {
+        System.out.println("data come to the database");
+        try {
+            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            ImageIO.write(bufferedImage,"png",byteArrayOutputStream);
+            Blob blob = new SerialBlob(byteArrayOutputStream.toByteArray());
+            int age = 0;
+            Connection connection = DBConnection.getInstance().getConnection();
+            PreparedStatement stm = connection.prepareStatement("INSERT INTO Patient (image,name, id_number,passport_number,birthday,age,gender,height,weight,address,email,note) VALUES ( ?,?,?,?,?,?,?,?,?,?,?,?)");
+            stm.setBlob(1,blob);
+            stm.setString(2,name);
+            stm.setString(3,idNumber);
+            stm.setString(4,passportNumber);
+            stm.setDate(5, Date.valueOf(birthday));
+            stm.setInt(6,age);
+            stm.setString(7,gender.toString());
+            stm.setDouble(8,(height==null)?0:height);
+            stm.setDouble(9,(weight==null)?0:weight);
+            stm.setString(10,address);
+            stm.setString(11,email);
+            stm.setString(12,note);
+            stm.executeUpdate();
+        } catch (SQLException | IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public ResultSet searchPatientsName(String searchingWord) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE name LIKE %s", "'"+searchingWord+"%'"));
+            return preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
         return null;
     }
 
     @Override
-    public void updatePatientDatabase(String number, String name, String idNumber, String passportNumber, LocalDate date, String gender, Double weight, Double height, String address, ArrayList<String> contactNumbers, String email, String note) {
-        System.out.println("data come to the database");
+    public ResultSet searchPatientsId(int number) {
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE patient_number = %s", "'"+number+"%'"));
+            return preparedStatement.executeQuery();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
+    @Override
+    public int lastPatientID() {
+        try {
+            String sql = "SELECT * FROM Patient ORDER BY patient_Number DESC LIMIT 1";
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(sql);
+            resultSet.next();
+            return resultSet.getInt(2);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 
 }
