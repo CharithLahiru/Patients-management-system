@@ -3,15 +3,14 @@ package lk.mega.se.application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import lk.mega.se.data.DataSaveRetrieve;
 import lk.mega.se.data.DataSaveRetrieveImpl;
+
 import java.io.File;
 import java.sql.Blob;
 import java.sql.ResultSet;
@@ -21,28 +20,24 @@ import java.util.ArrayList;
 
 public class AddPatientController {
 
-    public TextField txtIDNumber;
-    public TextField txtPassportNumber;
     public Button btnNew;
     public Button btnAdd;
     public Button btnDelete;
-    public ListView lstContactNumbers;
+    public ListView<String> lstContactNumbers;
     public RadioButton tglMale;
     public ToggleGroup gender;
     public ImageView imgPatient;
-    public TableView<Patient> tblPatients;
     public Button btnBrowse;
     public Button btnImgRemove;
     public RadioButton tglFemale;
-    public VBox vBoxStudentsList;
-    public Pane paneHistory;
-    public Button btnBack;
-    public AnchorPane paneHome;
+    public ComboBox<String> cmbName;
+    public ComboBox<String> cmbIdNumber;
+    public ComboBox<String> cmbPassportNumber;
     @FXML
     private Button btnSave;
 
     @FXML
-    private Button btnHistory;
+    private Button btnAddBill;
 
     @FXML
     private Button btnRemove;
@@ -63,13 +58,10 @@ public class AddPatientController {
     private TextField txtHeight;
 
     @FXML
-    private TextField txtName;
-
-    @FXML
     private TextArea txtNote;
 
     @FXML
-    private TextField txtPatientNumber;
+    private ComboBox<String> txtPatientNumber;
 
     @FXML
     private TextField txtPhoneNumber;
@@ -80,12 +72,13 @@ public class AddPatientController {
     private DataSaveRetrieve dataSaveRetrieve = new DataSaveRetrieveImpl();
     private boolean isValidate;
     private TextField[] textFields;
+    private ArrayList<Patient> patients = new ArrayList<>();
+    private int index = 0;
 
     public void initialize() throws SQLException {
-        paneHome.getStyleClass().add("pane-background");
         testingData();
 
-        textFields = new TextField[]{txtPatientNumber, txtName, txtIDNumber, txtPassportNumber, txtAge, txtWeight, txtHeight, txtPhoneNumber, txtEmail};
+        textFields = new TextField[]{txtAge, txtWeight, txtHeight, txtPhoneNumber, txtEmail}; // effect here should be recover
 
         txtPhoneNumber.textProperty().addListener((observableValue, previous, current) -> {
             if (validateContactNumber(txtPhoneNumber.getText())) btnAdd.setDisable(false);
@@ -96,32 +89,6 @@ public class AddPatientController {
             else btnRemove.setDisable(false);
         });
 
-        tblPatients.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("imageView"));
-        tblPatients.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("patientNumber"));
-        tblPatients.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("name"));
-        tblPatients.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("idNumber"));
-        tblPatients.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("passportNumber"));
-        tblPatients.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("email"));
-
-        tblPatients.getSelectionModel().selectedItemProperty().addListener((observableValue, previous, current) -> {
-            Patient patient;
-            if ((patient = tblPatients.getSelectionModel().getSelectedItem()) != null) {
-                patientGetData(patient);
-                txtPatientNumber.setEditable(false);
-                btnDelete.setDisable(false);
-                btnHistory.setDisable(false);
-                btnAdd.setDisable(false);
-            } else {
-                txtPatientNumber.setEditable(true);
-                btnDelete.setDisable(true);
-                btnHistory.setDisable(true);
-                btnAdd.setDisable(true);
-            }
-        });
-
-        for (int i = 0; i < 6; i++) {
-            tblPatients.getColumns().get(i).getStyleClass().add("center");
-        }
         searchPatientNumber();
         searchName();
         searchIdNumber();
@@ -130,86 +97,124 @@ public class AddPatientController {
     }
 
     private void searchPassportNumber() {
-        txtPassportNumber.textProperty().addListener((observableValue, previous, current) -> {
-            if(tblPatients.getSelectionModel().isEmpty()){
-                ResultSet resultSet = dataSaveRetrieve.searchPatientsPassportNumber(txtPassportNumber.getText());
-                tblPatients.getItems().clear();
-                try {
-                    while (resultSet.next()){
-                        Patient patient = patientSetDataFromDB(resultSet);
-                        tblPatients.getItems().add(patient);
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+        cmbPassportNumber.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            if (cmbPassportNumber.getEditor().getText().isBlank()) {
+                cmbPassportNumber.hide();
+                return;
             }
-        });
-    }
-
-    private void searchIdNumber() {
-        txtIDNumber.textProperty().addListener((observableValue, previous, current) -> {
-            if(tblPatients.getSelectionModel().isEmpty()){
-                ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(txtIDNumber.getText());
-                tblPatients.getItems().clear();
-                try {
-                    while (resultSet.next()){
-                        Patient patient = patientSetDataFromDB(resultSet);
-                        tblPatients.getItems().add(patient);
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
+            if (!cmbPassportNumber.getSelectionModel().isEmpty()) {
+                index = cmbPassportNumber.getSelectionModel().getSelectedIndex();
+                return;
             }
-        });
-    }
-
-    private void searchName(){
-        txtName.textProperty().addListener((observableValue, previous, current) -> {
-            if(tblPatients.getSelectionModel().isEmpty()){
-                ResultSet resultSet = dataSaveRetrieve.searchPatientsName(txtName.getText());
-                tblPatients.getItems().clear();
-                try {
-                    while (resultSet.next()){
-                        Patient patient = patientSetDataFromDB(resultSet);
-                        tblPatients.getItems().add(patient);
-                    }
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    private void searchPatientNumber() {
-        txtPatientNumber.textProperty().addListener((observableValue, previous, current) -> {
-            if (!tblPatients.getSelectionModel().isEmpty()) return;
-            btnSave.setDisable(false);
-            char[] chars = txtPatientNumber.getText().toCharArray();
-            if (chars.length<1) return;
-            if (chars[0]!='P') return;
-            if (chars.length!=4) return;
-            for (int i = 1; i < 4; i++) {
-                if (!Character.isDigit(chars[i])) return;
-            }
-            int number =Integer.parseInt(txtPatientNumber.getText().substring(1, 4)) ;
-            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(number);
+            patients.clear();
+            cmbPassportNumber.getItems().clear();
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsPassportNumber(cmbPassportNumber.getEditor().getText());
             try {
-                tblPatients.getItems().clear();
-                while (resultSet.next()){
-                    btnSave.setDisable(true);
-                    Patient patient = patientSetDataFromDB(resultSet);
-                    tblPatients.getItems().add(patient);
+                while (resultSet.next()) {
+                    patients.add(patientSetDataFromDB(resultSet));
+                    cmbPassportNumber.getItems().add(resultSet.getString("passport_number"));
                 }
+
             } catch (SQLException e) {
                 e.printStackTrace();
             }
         });
     }
 
+    private void searchIdNumber() {
+        cmbIdNumber.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            if (cmbIdNumber.getEditor().getText().isBlank()) {
+                cmbIdNumber.hide();
+                return;
+            }
+            if (!cmbIdNumber.getSelectionModel().isEmpty()) {
+                index = cmbIdNumber.getSelectionModel().getSelectedIndex();
+                return;
+            }
+            patients.clear();
+            cmbIdNumber.getItems().clear();
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(cmbIdNumber.getEditor().getText());
+            try {
+                while (resultSet.next()) {
+                    patients.add(patientSetDataFromDB(resultSet));
+                    cmbIdNumber.getItems().add(resultSet.getString("id_number"));
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    public void cmbNameOnKeyReleased(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            System.out.println(index);
+            cmbName.getSelectionModel().select(null);
+            patientGetData(patients.get(index));
+            cmbName.hide();
+            txtPatientNumber.hide();
+
+        } else {
+            cmbName.show();
+        }
+    }
+
+    private void searchName() {
+
+        cmbName.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            if (cmbName.getEditor().getText().isBlank()) {
+                cmbName.hide();
+                return;
+            }
+            if (!cmbName.getSelectionModel().isEmpty()) {
+                index = cmbName.getSelectionModel().getSelectedIndex();
+                return;
+            }
+            patients.clear();
+            cmbName.getItems().clear();
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsName(cmbName.getEditor().getText());
+            try {
+                while (resultSet.next()) {
+                    patients.add(patientSetDataFromDB(resultSet));
+                    cmbName.getItems().add(resultSet.getString("name"));
+                }
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+
+    private void searchPatientNumber() {
+        txtPatientNumber.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            btnNew.fire();
+            btnSave.setDisable(false);
+            char[] chars = txtPatientNumber.getEditor().getText().toCharArray();
+            if (chars.length < 1) return;
+            if (chars[0] != 'P') return;
+            if (chars.length != 4) return;
+            for (int i = 1; i < 4; i++) {
+                if (!Character.isDigit(chars[i])) return;
+            }
+            int number = Integer.parseInt(txtPatientNumber.getEditor().getText().substring(1, 4));
+            ResultSet resultSet = dataSaveRetrieve.searchPatientsIdNumber(number);
+            try {
+                if (!resultSet.next()) return;
+                txtPatientNumber.getItems().add(String.format("P%03d", (Integer.parseInt(resultSet.getString("patient_number")))));
+                Patient patient = patientSetDataFromDB(resultSet);
+                patientGetData(patient);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            txtPatientNumber.show();
+            txtPatientNumber.getEditor().setEditable(false);
+        });
+    }
+
     private void testingData() {
-        txtName.setText("alice");
-        txtIDNumber.setText("568954795V");
-        txtPassportNumber.setText("G-45152");
+        cmbName.getEditor().setText("alice");
+        cmbIdNumber.getEditor().setText("568954795V");
+        cmbPassportNumber.getEditor().setText("G-45152");
         gender.selectToggle(tglMale);
         txtWeight.setText("65");
         txtHeight.setText("160");
@@ -217,33 +222,29 @@ public class AddPatientController {
         lstContactNumbers.getItems().add("071-4596854");
         lstContactNumbers.getItems().add("077-2536348");
         txtEmail.setText("vishaka@gmail.com");
+
         txtNote.setText("This data for testing purposes");
     }
 
     public void btnNewOnAction(ActionEvent actionEvent) {
-        for (TextField textField : textFields) {
+        for (TextField textField : textFields) {                // text feild used
             textField.clear();
         }
         imgPatient.setImage(new Image("/images/user.png"));
-        txtPatientNumber.setText(generatePatientNumber());
+        txtPatientNumber.getEditor().setEditable(true);
         txtBirthday.setValue(null);
-        if (gender.getSelectedToggle()!=null)gender.getSelectedToggle().setSelected(false);
+        if (gender.getSelectedToggle() != null) gender.getSelectedToggle().setSelected(false);
         txtAddress.clear();
         lstContactNumbers.getItems().clear();
         txtNote.clear();
 
-        txtName.requestFocus();
-
-        btnHistory.setDisable(true);
+        btnAddBill.setDisable(true);
         btnDelete.setDisable(true);
-        tblPatients.getSelectionModel().clearSelection();
+        txtPatientNumber.getItems().clear();
     }
 
     @FXML
-    void btnHistoryOnAction(ActionEvent event) {
-        vBoxStudentsList.setVisible(false);
-        paneHistory.setVisible(true);
-
+    void btnAddBillOnAction(ActionEvent event) {
     }
 
     public void btnBrowseOnAction(ActionEvent actionEvent) {
@@ -296,48 +297,30 @@ public class AddPatientController {
         for (Object num : lstContactNumbers.getItems()) {
             numberList.add(num.toString());
         }
-        int selectedIndex = tblPatients.getSelectionModel().getSelectedIndex();
 
         dataSaveRetrieve.updatePatientDatabase(
                 imgPatient.getImage(),
-                txtName.getText(),
-                txtIDNumber.getText(),
-                txtPassportNumber.getText(),
+                cmbName.getEditor().getText(),
+                cmbIdNumber.getEditor().getText(),
+                cmbPassportNumber.getEditor().getText(),
                 txtBirthday.getValue(),
                 (gender.getSelectedToggle() == tglMale) ? "Male" : "Female",
-                txtWeight.getText().trim().isBlank()? null:Double.parseDouble(txtWeight.getText()),
-                txtHeight.getText().trim().isBlank()? null:Double.parseDouble(txtHeight.getText()),
+                txtWeight.getText().trim().isBlank() ? null : Double.parseDouble(txtWeight.getText()),
+                txtHeight.getText().trim().isBlank() ? null : Double.parseDouble(txtHeight.getText()),
                 txtAddress.getText(),
                 numberList,
                 txtEmail.getText(),
                 txtNote.getText()
         );
 
-        if (tblPatients.getSelectionModel().getSelectedItems().isEmpty()){
-            Patient patient = patientSetDataFromField();
-            tblPatients.getItems().add(patient);
-        }else {
-            Patient patient = patientSetDataFromField();
-            tblPatients.getItems().remove(tblPatients.getSelectionModel().getSelectedIndex());
-            tblPatients.getItems().add(patient);
-        }
-
         btnNew.fire();
     }
 
     public void btnDeleteOnAction(ActionEvent actionEvent) {
-        int patientNumber = Integer.parseInt(tblPatients.getSelectionModel().getSelectedItem().getPatientNumber().substring(1, 4));
-        dataSaveRetrieve.deletePatient(patientNumber);
-        tblPatients.getItems().remove(tblPatients.getSelectionModel().getSelectedIndex());
-        tblPatients.getSelectionModel().clearSelection();
+        dataSaveRetrieve.deletePatient(Integer.parseInt(txtPatientNumber.getEditor().getText().substring(1, 4)));
         btnNew.fire();
     }
 
-    public void btnBackOnAction(ActionEvent actionEvent) {
-        vBoxStudentsList.setVisible(true);
-        paneHistory.setVisible(false);
-        btnNew.fire();
-    }
     private boolean validateContactNumber(String number) {
         if (txtPhoneNumber.getText().trim().length() < 4) return false;
         return true;
@@ -346,30 +329,24 @@ public class AddPatientController {
     private Patient patientSetDataFromField() {
         Patient patient = new Patient();
 
-//        try {
-//            Blob blob = resultSet.getBlob("");
-//
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//        }
         Image image = new Image(imgPatient.getImage().getUrl(), 50, 50, true, true);
         ImageView imageView = new ImageView();
         imageView.setImage(image);
         patient.setImageView(imageView);
 
-        patient.setPatientNumber(txtPatientNumber.getText());
-        patient.setName(txtName.getText());
-        patient.setIdNumber(txtIDNumber.getText());
-        patient.setPassportNumber(txtPassportNumber.getText());
+        patient.setPatientNumber(txtPatientNumber.getValue().toString());
+        patient.setName(cmbName.getEditor().getText());
+        patient.setIdNumber(cmbIdNumber.getEditor().getText());
+        patient.setPassportNumber(cmbPassportNumber.getEditor().getText());
         patient.setBirthday(txtBirthday.getValue());
         try {
             patient.setWeight(Integer.valueOf(txtWeight.getText().trim()));
-        }catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             txtWeight.setText("");
         }
         try {
             patient.setHeight(Integer.valueOf(txtHeight.getText().trim()));
-        }catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             txtHeight.setText("");
         }
         patient.setAddress(txtAddress.getText());
@@ -408,9 +385,9 @@ public class AddPatientController {
 
     private void validateData() {
         txtPatientNumber.getStyleClass().remove("invalid");
-        txtName.getStyleClass().remove("invalid");
-        txtIDNumber.getStyleClass().remove("invalid");
-        txtPassportNumber.getStyleClass().remove("invalid");
+        cmbName.getStyleClass().remove("invalid");
+        cmbIdNumber.getEditor().getStyleClass().remove("invalid");
+        cmbPassportNumber.getEditor().getStyleClass().remove("invalid");
         txtBirthday.getStyleClass().remove("invalid");
         txtWeight.getStyleClass().remove("invalid");
         txtHeight.getStyleClass().remove("invalid");
@@ -423,25 +400,25 @@ public class AddPatientController {
 
         try {
             LocalDate value = txtBirthday.getValue();
-            if (value==null) throw new Exception();
+            if (value == null) throw new Exception();
         } catch (Exception e) {
             isValidate = false;
             txtBirthday.getStyleClass().add("invalid");
         }
 
-        if (txtPassportNumber.getText().isEmpty()) {
+        if (cmbPassportNumber.getEditor().getText().isEmpty()) {
             isValidate = false;
-            txtPassportNumber.getStyleClass().add("invalid");
+            cmbPassportNumber.getEditor().getStyleClass().add("invalid");
         }
 
-        if (txtIDNumber.getText().isEmpty()) {
+        if (cmbIdNumber.getEditor().getText().isEmpty()) {
             isValidate = false;
-            txtIDNumber.getStyleClass().add("invalid");
+            cmbIdNumber.getEditor().getStyleClass().add("invalid");
         }
 
-        if (txtName.getText().isEmpty()) {
+        if (cmbName.getEditor().getText().isEmpty()) {
             isValidate = false;
-            txtName.getStyleClass().add("invalid");
+            cmbName.getStyleClass().add("invalid");
         }
 
         if (txtHeight.getText().isEmpty()) {
@@ -474,10 +451,11 @@ public class AddPatientController {
     private void patientGetData(Patient patient) {
         Image image = dataSaveRetrieve.retrievePatientImage(Integer.parseInt((patient.getPatientNumber().substring(1, 4))));
         imgPatient.setImage(image);
-        txtPatientNumber.setText(patient.getPatientNumber());
-        txtName.setText(patient.getName());
-        txtIDNumber.setText(patient.getIdNumber());
-        txtPassportNumber.setText(patient.getPassportNumber());
+        txtPatientNumber.setValue(patient.getPatientNumber());
+        cmbName.getEditor().setText(patient.getName());
+        cmbName.getEditor().setText(patient.getName());
+        cmbIdNumber.getEditor().setText(patient.getIdNumber());
+        cmbPassportNumber.getEditor().setText(patient.getPassportNumber());
         txtBirthday.setValue(patient.getBirthday());
         gender.selectToggle((patient.getGender() == Gender.MALE) ? tglMale : tglFemale);
         txtAge.setText(patient.getAge() + "");
@@ -491,7 +469,7 @@ public class AddPatientController {
 
     private String generatePatientNumber() {
         int i = dataSaveRetrieve.lastPatientID();
-        return String.format("P%03d",i+1);
+        return String.format("P%03d", i + 1);
     }
 
     @FXML
@@ -514,14 +492,37 @@ public class AddPatientController {
 
     }
 
-    @FXML
-    void txtNameOnKeyReleased(KeyEvent event) {
-
-    }
-
 
     @FXML
     void txtWeightOnKeyReleased(KeyEvent event) {
+
+    }
+
+    public void cmbIdNumberOnKeyReleased(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            System.out.println(index);
+            cmbIdNumber.getSelectionModel().select(null);
+            patientGetData(patients.get(index));
+            cmbIdNumber.hide();
+            txtPatientNumber.hide();
+
+        } else {
+            cmbIdNumber.show();
+        }
+
+    }
+
+    public void cmbPassportNumberOnKeyReleased(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER) {
+            System.out.println(index);
+            cmbPassportNumber.getSelectionModel().select(null);
+            patientGetData(patients.get(index));
+            cmbPassportNumber.hide();
+            txtPatientNumber.hide();
+
+        } else {
+            cmbPassportNumber.show();
+        }
 
     }
 }
