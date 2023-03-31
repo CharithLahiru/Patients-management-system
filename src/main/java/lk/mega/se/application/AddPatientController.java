@@ -3,11 +3,14 @@ package lk.mega.se.application;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.FileChooser;
+import lk.mega.se.data.BillDB;
+import lk.mega.se.data.BillDBImpl;
 import lk.mega.se.data.DataSaveRetrieve;
 import lk.mega.se.data.DataSaveRetrieveImpl;
 
@@ -15,8 +18,13 @@ import java.io.File;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 
 public class AddPatientController {
 
@@ -33,6 +41,24 @@ public class AddPatientController {
     public ComboBox<String> cmbName;
     public ComboBox<String> cmbIdNumber;
     public ComboBox<String> cmbPassportNumber;
+    public ComboBox<String> cmbService;
+    public TableView<Service> tblService;
+    public Button btnPrint;
+    public Button btnCancel;
+    public RadioButton rdoCash;
+    public ToggleGroup paymentMethod;
+    public RadioButton rdoCard;
+    public Label lblServiceTotal;
+    public Label lblDiscount;
+    public Label lblTax;
+    public Label lblFinalTotal;
+    public Button btnServiceRemove;
+    public DatePicker dpcServiceDate;
+    public ComboBox<String> cmbServiceTime;
+    public TextField txtDiscount;
+    public TextField txtTax;
+    public TextField txtQty;
+    public Button btnServiceAdd;
     @FXML
     private Button btnSave;
 
@@ -70,6 +96,7 @@ public class AddPatientController {
     private TextField txtWeight;
 
     private DataSaveRetrieve dataSaveRetrieve = new DataSaveRetrieveImpl();
+    private BillDB billData = new BillDBImpl();
     private boolean isValidate;
     private TextField[] textFields;
     private ArrayList<Patient> patients = new ArrayList<>();
@@ -94,6 +121,64 @@ public class AddPatientController {
         searchIdNumber();
         searchPassportNumber();
 //        btnNew.fire();
+
+        //  bill side initialisation bellow
+
+        for (Object service : billData.getServices()) {
+            cmbService.getItems().add(service.toString());
+        }
+
+        for (String time : timeList) {
+            cmbServiceTime.getItems().add(time);
+        }
+
+        searchService();
+        searchTime();
+
+        tblService.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("service"));
+        tblService.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("qty"));
+        tblService.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("serviceDate"));
+        tblService.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("serviceTime"));
+        tblService.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("cost"));
+    }
+    private List<String> timeList = List.of("2.00 PM","2.15 PM","2.30 PM","2.45 PM","3.00 PM","3.15 PM","3.30 PM","3.45 PM","4.00 PM","4.15 PM","4.30 PM","4.45 PM");
+
+    private void searchTime() {
+        cmbServiceTime.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            if (cmbServiceTime.getSelectionModel().isEmpty()) cmbServiceTime.getItems().clear();
+            if (cmbServiceTime.getEditor().getText().isBlank()) return;
+            ArrayList<String> newTimeList = new ArrayList<>();
+            for (String time : timeList) {
+                char[] chars = cmbServiceTime.getEditor().getText().toCharArray();
+                for (int i = 0; i < chars.length; i++) {
+                    if (chars[i] != time.charAt(i)){
+                        break;
+                    }
+                    if (i == chars.length-1){
+                        newTimeList.add(time);
+                    }
+                }
+            }
+            for (String time : newTimeList) {
+                cmbServiceTime.getItems().add(time);
+            }
+            cmbServiceTime.show();
+
+        });
+    }
+
+    private void searchService() {
+        cmbService.getEditor().textProperty().addListener((observableValue, previous, current) -> {
+            if (cmbService.getSelectionModel().isEmpty()) cmbService.getItems().clear();
+            if (cmbService.getEditor().getText().isBlank()) {
+                cmbService.hide();
+            } else {
+                for (String service : billData.searchService(cmbService.getEditor().getText())) {
+                    cmbService.getItems().add(service);
+                }
+                cmbService.show();
+            }
+        });
     }
 
     private void searchPassportNumber() {
@@ -492,7 +577,6 @@ public class AddPatientController {
 
     }
 
-
     @FXML
     void txtWeightOnKeyReleased(KeyEvent event) {
 
@@ -523,6 +607,81 @@ public class AddPatientController {
         } else {
             cmbPassportNumber.show();
         }
+
+    }
+
+    // focused on bill detail bellow
+    public void btnServiceAddOnAction(ActionEvent actionEvent) {
+        if (!isValidServiceData()) return;
+        Service service = new Service();
+        service.setService(cmbService.getEditor().getText().trim());
+        service.setQty(Integer.parseInt(txtQty.getText()));
+        service.setServiceDate(dpcServiceDate.getValue());
+        service.setServiceTime(getLocalTimeFromCmb());
+        Double serviceCost = billData.getServiceCost(cmbService.getEditor().getText().trim());
+        service.setCost(serviceCost*Integer.parseInt(txtQty.getText()));
+        tblService.getItems().add(service);
+    }
+
+    private LocalTime getLocalTimeFromCmb(){
+        LocalTime localTime = null;
+        try {
+            String text = cmbServiceTime.getEditor().getText().trim();
+            String[] split = text.split("\\.| ");
+            if (split[2].strip().equals("AM") ||split[2].strip().equals("am")) {
+                localTime = LocalTime.of(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+            }else if (split[2].strip().equals("PM") ||split[2].strip().equals("pm")) {
+                localTime = LocalTime.of(Integer.parseInt(split[0])+12, Integer.parseInt(split[1]));
+            }
+        } catch (Exception e){
+            return null;
+        }
+        return localTime;
+    }
+    private boolean isValidServiceData() {
+        boolean isValid = true;
+        dpcServiceDate.getStyleClass().remove("invalid");
+        txtQty.getStyleClass().remove("invalid");
+        cmbService.getStyleClass().remove("invalid");
+        cmbServiceTime.getStyleClass().remove("invalid");
+
+        if (getLocalTimeFromCmb()==null){
+            cmbServiceTime.getStyleClass().add("invalid");
+            isValid=false;
+            cmbServiceTime.requestFocus();
+        }
+        if (dpcServiceDate.getValue()==null){
+            dpcServiceDate.getStyleClass().add("invalid");
+            isValid=false;
+            dpcServiceDate.requestFocus();
+        }
+        try {
+            Integer text = Integer.valueOf(txtQty.getText());
+
+        }catch (NumberFormatException e){
+            txtQty.getStyleClass().add("invalid");
+            txtQty.requestFocus();
+            isValid=false;
+        }
+        cmbService.getItems().contains(cmbService.getEditor().getText());
+        if (!cmbService.getItems().contains(cmbService.getEditor().getText()) ){
+            cmbService.getStyleClass().add("invalid");
+            cmbService.requestFocus();
+            isValid = false;
+        }
+        return isValid;
+    }
+
+    // todo: service combo list duplicate
+    public void btnServiceRemoveOnAction(ActionEvent actionEvent) {
+
+    }
+
+    public void btnCancelOnAction(ActionEvent actionEvent) {
+
+    }
+
+    public void btnPrintOnAction(ActionEvent actionEvent) {
 
     }
 }

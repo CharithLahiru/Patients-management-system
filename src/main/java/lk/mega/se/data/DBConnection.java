@@ -31,6 +31,8 @@ public class DBConnection {
             String url = "jdbc:mysql://" + host + ":" + port + "/" + database + "?createDatabaseIfNotExist=true&allowMultiQueries=true";
             connection = DriverManager.getConnection(url, username, password);
 
+
+
         } catch (Exception e) {
             e.printStackTrace();
             new Alert(Alert.AlertType.ERROR, "Fail to obtain database connection").showAndWait();

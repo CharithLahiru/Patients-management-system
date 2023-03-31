@@ -9,21 +9,27 @@ import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class DataSaveRetrieveImpl implements DataSaveRetrieve {
 
     Connection connection = DBConnection.getInstance().getConnection();
 
-    public DataSaveRetrieveImpl() {
-        generateTables();
-    }
 
-    private void generateTables() {
+    public void generateTables() {
         try {
             Statement statement = connection.createStatement();
             ResultSet rst = statement.executeQuery("SHOW TABLES");
-            if (!rst.next()) {
+            HashSet<String> tableSet = new HashSet<>();System.out.println(2);
+            while (rst.next()){
+                tableSet.add(rst.getString(1));
+            }
+            if (!tableSet.containsAll(Set.of("Patient","Contacts","Service","Invoice"))){
+                System.out.println("Schema is about to auto generate");
+                rst = statement.executeQuery("SHOW TABLES");
                 InputStream is = getClass().getResourceAsStream("/schema.sql");
+                System.out.println(is);
                 InputStreamReader inputStreamReader = new InputStreamReader(is);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 String line;
@@ -35,7 +41,7 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
                 statement.execute(stringBuilder.toString());
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
