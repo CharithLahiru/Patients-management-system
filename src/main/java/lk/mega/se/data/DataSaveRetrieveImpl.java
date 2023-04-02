@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.*;
 import java.sql.*;
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -21,15 +22,13 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
         try {
             Statement statement = connection.createStatement();
             ResultSet rst = statement.executeQuery("SHOW TABLES");
-            HashSet<String> tableSet = new HashSet<>();System.out.println(2);
+            HashSet<String> tableSet = new HashSet<>();
             while (rst.next()){
                 tableSet.add(rst.getString(1));
             }
             if (!tableSet.containsAll(Set.of("Patient","Contacts","Service","Invoice"))){
                 System.out.println("Schema is about to auto generate");
-                rst = statement.executeQuery("SHOW TABLES");
                 InputStream is = getClass().getResourceAsStream("/schema.sql");
-                System.out.println(is);
                 InputStreamReader inputStreamReader = new InputStreamReader(is);
                 BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
                 String line;
@@ -52,7 +51,8 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             ImageIO.write(bufferedImage,"png",byteArrayOutputStream);
             Blob blob = new SerialBlob(byteArrayOutputStream.toByteArray());
-            int age = 0;
+            Period period = Period.between(birthday, LocalDate.now());
+            int age = period.getYears();
             Connection connection = DBConnection.getInstance().getConnection();
             PreparedStatement stm = connection.prepareStatement("INSERT INTO Patient (image,name, id_number,passport_number,birthday,age,gender,height,weight,address,email,note) VALUES ( ?,?,?,?,?,?,?,?,?,?,?,?)");
             stm.setBlob(1,blob);

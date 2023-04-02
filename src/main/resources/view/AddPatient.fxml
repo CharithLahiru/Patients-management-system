@@ -26,7 +26,7 @@
          <font>
             <Font name="System Bold Italic" size="46.0" />
          </font></Label>
-      <AnchorPane layoutX="51.0" layoutY="70.0" minHeight="890.0" prefWidth="492.0" style="-fx-background-color: #6FE6EF;" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="70.0">
+      <AnchorPane fx:id="anchorPanePatient" layoutX="51.0" layoutY="70.0" minHeight="890.0" prefWidth="492.0" style="-fx-background-color: #6FE6EF;" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="70.0">
          <children>
             <VBox layoutX="1.0" layoutY="226.0" minHeight="660.0" prefHeight="660.0" prefWidth="491.0" spacing="10.0" AnchorPane.leftAnchor="25.0">
                <children>
@@ -115,7 +115,7 @@
                         <Insets left="120.0" />
                      </VBox.margin>
                      <children>
-                        <ListView fx:id="lstContactNumbers" minHeight="100.0" prefHeight="43.0" prefWidth="491.0" />
+                        <ListView fx:id="lstContactNumbers" minHeight="100.0" onKeyReleased="#lstContactNumbersOnKeyReleased" prefHeight="43.0" prefWidth="491.0" />
                         <VBox spacing="10.0">
                            <children>
                               <Button fx:id="btnRemove" disable="true" minWidth="80.0" mnemonicParsing="false" onAction="#btnRemoveOnAction" text="Remove" />
@@ -143,7 +143,7 @@
                   <Insets left="10.0" right="10.0" />
                </padding>
             </VBox>
-            <Button fx:id="btnAddBill" layoutX="342.0" mnemonicParsing="false" onAction="#btnAddBillOnAction" prefHeight="24.0" prefWidth="149.0" text="Add Bill" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
+            <Button fx:id="btnAddBill" disable="true" layoutX="342.0" mnemonicParsing="false" onAction="#btnAddBillOnAction" prefHeight="24.0" prefWidth="149.0" text="Add Bill" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0" />
             <HBox layoutX="319.0" layoutY="854.0" spacing="15.0" AnchorPane.bottomAnchor="10.0" AnchorPane.rightAnchor="10.0">
                <children>
                   <Button fx:id="btnSave" minWidth="80.0" mnemonicParsing="false" onAction="#btnSavaOnAction" text="Save" />
@@ -168,7 +168,7 @@
             </VBox>
          </children>
       </AnchorPane>
-      <AnchorPane layoutX="564.0" layoutY="70.0" prefHeight="851.0" prefWidth="726.0">
+      <AnchorPane fx:id="anchorPaneBill" disable="true" layoutX="564.0" layoutY="70.0" prefHeight="851.0" prefWidth="726.0">
          <children>
             <Label layoutX="232.0" layoutY="23.0" text="Bill Details">
                <font>
@@ -185,7 +185,7 @@
                   </HBox>
                   <HBox>
                      <children>
-                        <Label minWidth="70.0" text="Quntity" />
+                        <Label minWidth="70.0" text="Quantity" />
                         <TextField fx:id="txtQty" HBox.hgrow="ALWAYS" />
                      </children>
                   </HBox>
@@ -205,11 +205,11 @@
             </VBox>
             <TableView fx:id="tblService" layoutX="63.0" layoutY="258.0" prefHeight="289.0" prefWidth="553.0">
               <columns>
-                <TableColumn prefWidth="227.0" text="Service" />
-                  <TableColumn prefWidth="66.0" text="QTY" />
+                <TableColumn prefWidth="240.0" text="Service" />
+                  <TableColumn prefWidth="53.0" text="QTY" />
                 <TableColumn prefWidth="107.0" text="Date" />
-                  <TableColumn text="Time" />
-                  <TableColumn prefWidth="72.0" text="Cost" />
+                  <TableColumn prefWidth="75.0" text="Time" />
+                  <TableColumn prefWidth="76.0" text="Cost" />
               </columns>
             </TableView>
             <Label layoutX="452.0" layoutY="555.0" text="Total" />
@@ -217,29 +217,31 @@
             <Label layoutX="70.0" layoutY="654.0" text="Discount   " />
             <Label layoutX="70.0" layoutY="683.0" text="Tax   " />
             <Button fx:id="btnPrint" layoutX="233.0" layoutY="757.0" mnemonicParsing="false" onAction="#btnPrintOnAction" text="Print Bill" />
-            <Button fx:id="btnCancel" layoutX="328.0" layoutY="757.0" mnemonicParsing="false" onAction="#btnCancelOnAction" text="Cancle" />
-            <RadioButton fx:id="rdoCash" layoutX="233.0" layoutY="620.0" mnemonicParsing="false" text="Cash">
+            <Button fx:id="btnCancel" layoutX="328.0" layoutY="757.0" mnemonicParsing="false" onAction="#btnCancelOnAction" text="Cancel" />
+            <RadioButton fx:id="rdoCash" layoutX="233.0" layoutY="620.0" mnemonicParsing="false" onAction="#rdoPaymentMethodOnAction" text="Cash">
                <toggleGroup>
                   <ToggleGroup fx:id="paymentMethod" />
                </toggleGroup></RadioButton>
-            <RadioButton fx:id="rdoCard" layoutX="302.0" layoutY="620.0" mnemonicParsing="false" text="Card" toggleGroup="$paymentMethod" />
-            <Label fx:id="lblServiceTotal" layoutX="558.0" layoutY="555.0" text="\$ 1000" />
-            <Label fx:id="lblDiscount" layoutX="233.0" layoutY="654.0" text="\$ 50" />
+            <RadioButton fx:id="rdoCard" layoutX="302.0" layoutY="620.0" mnemonicParsing="false" onAction="#rdoPaymentMethodOnAction" text="Card" toggleGroup="$paymentMethod" />
+            <Label fx:id="lblServiceTotal" layoutX="558.0" layoutY="555.0" text="\$ 0" />
+            <Label fx:id="lblDiscount" layoutX="233.0" layoutY="654.0" text="\$ 0" />
             <Label layoutX="70.0" layoutY="717.0" text="Total">
                <font>
                   <Font size="16.0" />
                </font>
             </Label>
-            <Label fx:id="lblTax" layoutX="233.0" layoutY="683.0" text="\$ 100" />
-            <Label fx:id="lblFinalTotal" layoutX="236.0" layoutY="717.0" text="\$ 1150">
+            <Label fx:id="lblTax" layoutX="233.0" layoutY="683.0" text="\$ 0" />
+            <Label fx:id="lblFinalTotal" layoutX="236.0" layoutY="717.0" text="\$ 0">
                <font>
                   <Font size="17.0" />
                </font>
             </Label>
-            <Button fx:id="btnServiceRemove" layoutX="633.0" layoutY="523.0" mnemonicParsing="false" onAction="#btnServiceRemoveOnAction" text="Remove" />
-            <TextField fx:id="txtDiscount" layoutX="158.0" layoutY="650.0" prefHeight="24.0" prefWidth="55.0" text=" 5%" />
-            <TextField fx:id="txtTax" layoutX="158.0" layoutY="679.0" prefHeight="24.0" prefWidth="55.0" text=" 10%" />
+            <Button fx:id="btnServiceRemove" disable="true" layoutX="633.0" layoutY="523.0" mnemonicParsing="false" onAction="#btnServiceRemoveOnAction" text="Remove" />
+            <TextField fx:id="txtDiscount" alignment="TOP_RIGHT" editable="false" layoutX="158.0" layoutY="650.0" prefHeight="24.0" prefWidth="55.0" text="0" />
+            <TextField fx:id="txtTax" alignment="TOP_RIGHT" editable="false" layoutX="158.0" layoutY="679.0" prefHeight="24.0" prefWidth="55.0" text=" 10" />
             <Button fx:id="btnServiceAdd" layoutX="432.0" layoutY="169.0" mnemonicParsing="false" onAction="#btnServiceAddOnAction" prefHeight="24.0" prefWidth="73.0" text="Add" />
+            <Label layoutX="213.0" layoutY="654.0" text="\%" />
+            <Label layoutX="213.0" layoutY="683.0" text="\%" />
          </children>
       </AnchorPane>
    </children>
