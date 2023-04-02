@@ -12,11 +12,8 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
-<?import javafx.scene.image.Image?>
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
@@ -81,18 +78,6 @@
                         </RadioButton>
                      </children>
                   </HBox>
-                  <HBox layoutX="10.0" layoutY="186.0" prefHeight="24.0" prefWidth="388.0" visible="false">
-                     <children>
-                        <Label minWidth="120.0" text="Weight" />
-                        <TextField fx:id="txtWeight" onKeyReleased="#txtWeightOnKeyReleased" HBox.hgrow="ALWAYS" />
-                     </children>
-                  </HBox>
-                  <HBox layoutX="10.0" layoutY="210.0" prefHeight="24.0" prefWidth="388.0" visible="false">
-                     <children>
-                        <Label minWidth="120.0" text="Height" />
-                        <TextField fx:id="txtHeight" onKeyReleased="#txtHeightOnKeyReleased" HBox.hgrow="ALWAYS" />
-                     </children>
-                  </HBox>
                   <HBox layoutX="10.0" layoutY="58.0" prefHeight="56.0" prefWidth="388.0">
                      <children>
                         <Label minWidth="120.0" text="Address" />
@@ -151,21 +136,6 @@
                </children>
             </HBox>
             <Button fx:id="btnNew" mnemonicParsing="false" onAction="#btnNewOnAction" text="+ New Patient" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
-            <Pane layoutX="172.0" layoutY="46.0" style="-fx-border-color: black;" visible="false">
-               <children>
-                  <ImageView fx:id="imgPatient" fitHeight="150.0" fitWidth="150.0" layoutX="1.0" layoutY="1.0" pickOnBounds="true" preserveRatio="true">
-                     <image>
-                        <Image url="@../images/user.png" />
-                     </image>
-                  </ImageView>
-               </children>
-            </Pane>
-            <VBox layoutX="342.0" layoutY="141.0" spacing="10.0" visible="false">
-               <children>
-                  <Button fx:id="btnBrowse" minWidth="75.0" mnemonicParsing="false" onAction="#btnBrowseOnAction" text="Browse" textFill="#101111" />
-                  <Button fx:id="btnImgRemove" disable="true" minWidth="75.0" mnemonicParsing="false" onAction="#btnImgRemoveOnAction" text="Remove" />
-               </children>
-            </VBox>
          </children>
       </AnchorPane>
       <AnchorPane fx:id="anchorPaneBill" disable="true" layoutX="564.0" layoutY="70.0" prefHeight="851.0" prefWidth="726.0">

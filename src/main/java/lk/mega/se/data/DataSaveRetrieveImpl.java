@@ -45,30 +45,20 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     }
 
     @Override
-    public void updatePatientDatabase(Image image, String name, String idNumber, String passportNumber, LocalDate birthday, String gender, Double weight, Double height, String address, ArrayList<String> contactNumbers, String email, String note) {
+    public void updatePatientDatabase(String name, String idNumber, String passportNumber, LocalDate birthday, String gender, String address, ArrayList<String> contactNumbers, String email, String note) {
         try {
-            BufferedImage bufferedImage = SwingFXUtils.fromFXImage(image, null);
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            ImageIO.write(bufferedImage,"png",byteArrayOutputStream);
-            Blob blob = new SerialBlob(byteArrayOutputStream.toByteArray());
-            Period period = Period.between(birthday, LocalDate.now());
-            int age = period.getYears();
             Connection connection = DBConnection.getInstance().getConnection();
             PreparedStatement stm = connection.prepareStatement("INSERT INTO Patient (image,name, id_number,passport_number,birthday,age,gender,height,weight,address,email,note) VALUES ( ?,?,?,?,?,?,?,?,?,?,?,?)");
-            stm.setBlob(1,blob);
-            stm.setString(2,name);
-            stm.setString(3,idNumber);
-            stm.setString(4,passportNumber);
-            stm.setDate(5, Date.valueOf(birthday));
-            stm.setInt(6,age);
-            stm.setString(7,gender.toString());
-            stm.setDouble(8,(height==null)?0:height);
-            stm.setDouble(9,(weight==null)?0:weight);
-            stm.setString(10,address);
-            stm.setString(11,email);
-            stm.setString(12,note);
+            stm.setString(1,name);
+            stm.setString(2,idNumber);
+            stm.setString(3,passportNumber);
+            stm.setDate(4, Date.valueOf(birthday));
+            stm.setString(5,gender.toString());
+            stm.setString(6,address);
+            stm.setString(7,email);
+            stm.setString(8,note);
             stm.executeUpdate();
-        } catch (SQLException | IOException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
         }
     }
@@ -134,31 +124,10 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
             Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery(sql);
             resultSet.next();
-            return resultSet.getInt(2);
+            return resultSet.getInt("name");
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return 0;
     }
-
-    @Override
-    public Image retrievePatientImage(int number) {
-        try {
-            String sql = String.format("SELECT image FROM Patient WHERE patient_number='%d' ",number);
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            resultSet.next();
-            Blob blob = resultSet.getBlob("image");
-            if (blob==null){
-                return new Image("/images/hospital.png");
-            }else {
-                Image image = new Image(blob.getBinaryStream(), 150, 150, true, true);
-                return image;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
 }

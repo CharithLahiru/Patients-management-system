@@ -6,7 +6,6 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 public class Person implements Serializable {
-    private ImageView imageView;
     private String name;
     private String idNumber;
     private String passportNumber;
@@ -17,8 +16,7 @@ public class Person implements Serializable {
     private String address;
     private String email;
 
-    public Person(ImageView imageView, String name, String idNumber, String passportNumber, LocalDate birthday, int age, Gender gender, String contactNumber, String address, String email) {
-        this.imageView = imageView;
+    public Person(String name, String idNumber, String passportNumber, LocalDate birthday, int age, Gender gender, String contactNumber, String address, String email) {
         this.name = name;
         this.idNumber = idNumber;
         this.passportNumber = passportNumber;
@@ -30,14 +28,6 @@ public class Person implements Serializable {
         this.email = email;
     }
     public Person() {
-    }
-
-    public ImageView getImageView() {
-        return imageView;
-    }
-
-    public void setImageView(ImageView imageView) {
-        this.imageView = imageView;
     }
 
     public String getName() {

@@ -36,9 +36,6 @@ public class AddPatientController {
     public ListView<String> lstContactNumbers;
     public RadioButton tglMale;
     public ToggleGroup gender;
-    public ImageView imgPatient;
-    public Button btnBrowse;
-    public Button btnImgRemove;
     public RadioButton tglFemale;
     public ComboBox<String> cmbName;
     public ComboBox<String> cmbIdNumber;
@@ -85,9 +82,6 @@ public class AddPatientController {
     private TextField txtEmail;
 
     @FXML
-    private TextField txtHeight;
-
-    @FXML
     private TextArea txtNote;
 
     @FXML
@@ -95,9 +89,6 @@ public class AddPatientController {
 
     @FXML
     private TextField txtPhoneNumber;
-
-    @FXML
-    private TextField txtWeight;
 
     private DataSaveRetrieve dataSaveRetrieve = new DataSaveRetrieveImpl();
     private BillDB billData = new BillDBImpl();
@@ -110,7 +101,7 @@ public class AddPatientController {
     public void initialize() throws SQLException {
 //        testingData();
 
-        textFields = new TextField[]{txtWeight, txtHeight, txtPhoneNumber, txtEmail};
+        textFields = new TextField[]{txtPhoneNumber, txtEmail};
 
         txtPhoneNumber.textProperty().addListener((observableValue, previous, current) -> {
             if (validateContactNumber(txtPhoneNumber.getText())) btnAdd.setDisable(false);
@@ -349,8 +340,6 @@ public class AddPatientController {
         cmbIdNumber.getEditor().setText("568954795V");
         cmbPassportNumber.getEditor().setText("G-45152");
         gender.selectToggle(tglMale);
-        txtWeight.setText("65");
-        txtHeight.setText("160");
         txtAddress.setText("rawathawaththa road, moratuwa.");
         lstContactNumbers.getItems().add("071-4596854");
         lstContactNumbers.getItems().add("077-2536348");
@@ -369,7 +358,6 @@ public class AddPatientController {
         cmbIdNumber.getEditor().clear();
         cmbPassportNumber.getEditor().clear();
 
-        imgPatient.setImage(new Image("/images/user.png"));
         txtPatientNumber.getEditor().setEditable(true);
         txtBirthday.setValue(null);
         if (gender.getSelectedToggle() != null) gender.getSelectedToggle().setSelected(false);
@@ -389,26 +377,6 @@ public class AddPatientController {
         btnDelete.setDisable(true);
         anchorPaneBill.setDisable(false);
         btnAddBill.setDisable(true);
-    }
-
-    public void btnBrowseOnAction(ActionEvent actionEvent) {
-        FileChooser fileChooser = new FileChooser();
-        fileChooser.setTitle("Select Patient photo");
-        File file = fileChooser.showOpenDialog(btnBrowse.getScene().getWindow());
-        if (file == null) return;
-        try {
-            imgPatient.setImage(new Image(file.toURI().toString(), 150, 150, false, false));
-        } catch (Exception e) {
-            new Alert(Alert.AlertType.ERROR, "Chosen file can not lode").showAndWait();
-            e.printStackTrace();
-            return;
-        }
-        btnImgRemove.setDisable(false);
-    }
-
-    public void btnImgRemoveOnAction(ActionEvent actionEvent) {
-        imgPatient.setImage(new Image("/images/user.png"));
-        btnImgRemove.setDisable(true);
     }
 
     public void btnAddOnAction(ActionEvent actionEvent) {
@@ -449,14 +417,11 @@ public class AddPatientController {
         }
 
         dataSaveRetrieve.updatePatientDatabase(
-                imgPatient.getImage(),
                 cmbName.getEditor().getText(),
                 cmbIdNumber.getEditor().getText(),
                 cmbPassportNumber.getEditor().getText(),
                 txtBirthday.getValue(),
                 (gender.getSelectedToggle() == tglMale) ? "Male" : "Female",
-                txtWeight.getText().trim().isBlank() ? null : Double.parseDouble(txtWeight.getText()),
-                txtHeight.getText().trim().isBlank() ? null : Double.parseDouble(txtHeight.getText()),
                 txtAddress.getText(),
                 numberList,
                 txtEmail.getText(),
@@ -478,46 +443,11 @@ public class AddPatientController {
         return true;
     }
 
-    private Patient patientSetDataFromField() {
-        Patient patient = new Patient();
-
-        Image image = new Image(imgPatient.getImage().getUrl(), 50, 50, true, true);
-        ImageView imageView = new ImageView();
-        imageView.setImage(image);
-        patient.setImageView(imageView);
-
-        patient.setPatientNumber(txtPatientNumber.getValue().toString());
-        patient.setName(cmbName.getEditor().getText());
-        patient.setIdNumber(cmbIdNumber.getEditor().getText());
-        patient.setPassportNumber(cmbPassportNumber.getEditor().getText());
-        patient.setBirthday(txtBirthday.getValue());
-        try {
-            patient.setWeight(Integer.valueOf(txtWeight.getText().trim()));
-        } catch (NumberFormatException e) {
-            txtWeight.setText("");
-        }
-        try {
-            patient.setHeight(Integer.valueOf(txtHeight.getText().trim()));
-        } catch (NumberFormatException e) {
-            txtHeight.setText("");
-        }
-        patient.setAddress(txtAddress.getText());
-        patient.setContactNumber(txtPhoneNumber.getText());
-        patient.setEmail(txtEmail.getText());
-        patient.setNote(txtNote.getText());
-        return patient;
-    }
-
     private Patient patientSetDataFromDB(ResultSet resultSet) {
         Patient patient = new Patient();
 
 
         try {
-            Blob blob = resultSet.getBlob("image");
-            Image image = new Image(blob.getBinaryStream(), 50, 50, true, true);
-            ImageView imageView = new ImageView();
-            imageView.setImage(image);
-            patient.setImageView(imageView);
             patient.setPatientNumber(String.format("P%03d", resultSet.getInt("patient_number")));
             patient.setName(resultSet.getString("name"));
             patient.setIdNumber(resultSet.getString("id_number"));
@@ -526,10 +456,8 @@ public class AddPatientController {
             patient.setBirthday(localDate);
             Period period = Period.between(localDate, LocalDate.now());
             patient.setAge(period.getYears());
-            patient.setWeight((int) resultSet.getDouble("height"));
-            patient.setHeight((int) resultSet.getDouble("weight"));
             patient.setAddress(resultSet.getString("address"));
-            patient.setContactNumber(txtPhoneNumber.getText());                 // update contact list
+            patient.setContactNumber(txtPhoneNumber.getText());                 //todo: update contact list
             patient.setEmail(resultSet.getString("email"));
             patient.setNote(resultSet.getString("note"));
         } catch (SQLException e) {
@@ -545,8 +473,6 @@ public class AddPatientController {
         cmbIdNumber.getEditor().getStyleClass().remove("invalid");
         cmbPassportNumber.getEditor().getStyleClass().remove("invalid");
         txtBirthday.getStyleClass().remove("invalid");
-        txtWeight.getStyleClass().remove("invalid");
-        txtHeight.getStyleClass().remove("invalid");
         txtAddress.getStyleClass().remove("invalid");
         txtPhoneNumber.getStyleClass().remove("invalid");
         lstContactNumbers.getStyleClass().remove("invalid");
@@ -577,26 +503,6 @@ public class AddPatientController {
             cmbName.getStyleClass().add("invalid");
         }
 
-        if (txtHeight.getText().isEmpty()) {
-        } else {
-            try {
-                Double.parseDouble(txtHeight.getText());
-            } catch (Exception e) {
-                isValidate = false;
-                txtHeight.getStyleClass().add("invalid");
-            }
-        }
-
-        if (txtWeight.getText().isEmpty()) {
-        } else {
-            try {
-                Double.parseDouble(txtWeight.getText());
-            } catch (Exception e) {
-                isValidate = false;
-                txtWeight.getStyleClass().add("invalid");
-            }
-        }
-
         if (lstContactNumbers.getItems().size() == 0) {
             isValidate = false;
             lstContactNumbers.getStyleClass().add("invalid");
@@ -605,8 +511,6 @@ public class AddPatientController {
     }
 
     private void patientGetData(Patient patient) {
-        Image image = dataSaveRetrieve.retrievePatientImage(Integer.parseInt((patient.getPatientNumber().substring(1, 4))));
-        imgPatient.setImage(image);
         txtPatientNumber.setValue(patient.getPatientNumber());
         cmbName.getEditor().setText(patient.getName());
         cmbName.getEditor().setText(patient.getName());
@@ -615,19 +519,11 @@ public class AddPatientController {
         txtBirthday.setValue(patient.getBirthday());
         gender.selectToggle((patient.getGender() == Gender.MALE) ? tglMale : tglFemale);
         txtAge.setText(patient.getAge() + "");
-        txtWeight.setText(patient.getWeight() + "");
-        txtHeight.setText(patient.getHeight() + "");
         txtAddress.setText(patient.getAddress());
         txtPhoneNumber.setText(patient.getContactNumber());
         txtEmail.setText(patient.getEmail());
         txtNote.setText(patient.getNote());
     }
-
-    private String generatePatientNumber() {
-        int i = dataSaveRetrieve.lastPatientID();
-        return String.format("P%03d", i + 1);
-    }
-
     @FXML
     void tXtPhoneNumberOnKeyReleased(KeyEvent event) {
         if (event.getCode() == KeyCode.ENTER) {
@@ -654,16 +550,6 @@ public class AddPatientController {
         if (event.getCode() == KeyCode.ENTER){
             txtNote.requestFocus();
         }
-    }
-
-    @FXML
-    void txtHeightOnKeyReleased(KeyEvent event) {
-
-    }
-
-    @FXML
-    void txtWeightOnKeyReleased(KeyEvent event) {
-
     }
 
     public void cmbNameOnKeyReleased(KeyEvent keyEvent) {
