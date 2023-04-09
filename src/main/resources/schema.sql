@@ -24,14 +24,16 @@ CREATE TABLE  IF NOT EXISTS Service(
 
 CREATE TABLE  IF NOT EXISTS Invoice(
     invoice_number INTEGER PRIMARY KEY AUTO_INCREMENT,
+    invoice_date DATE NOT NULL,
     patient_number INTEGER NOT NULL ,
-    date DATE NOT NULL ,
-    time TIME,
+    service_date DATE ,
+    service_time TIME,
     service VARCHAR(50) NOT NULL ,
     qty INTEGER NOT NULL,
-    paymentMethod VARCHAR(5) NOT NULL ,
-    discount INTEGER NOT NULL,
-    tax INTEGER NOT NULL,
+    payment_method VARCHAR(5) NOT NULL ,
+    cost DOUBLE NOT NULL ,
+    discount DOUBLE NOT NULL,
+    tax DOUBLE NOT NULL,
     final_cost INTEGER NOT NULL,
     CONSTRAINT fk_service FOREIGN KEY (service) REFERENCES Service(service),
     CONSTRAINT fk_patient_number FOREIGN KEY (patient_number) REFERENCES Patient(patient_number)

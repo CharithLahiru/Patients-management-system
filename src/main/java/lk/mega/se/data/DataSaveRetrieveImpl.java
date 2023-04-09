@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class DataSaveRetrieveImpl implements DataSaveRetrieve {
@@ -48,7 +49,7 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     public void updatePatientDatabase(String name, String idNumber, String passportNumber, LocalDate birthday, String gender, String address, ArrayList<String> contactNumbers, String email, String note) {
         try {
             Connection connection = DBConnection.getInstance().getConnection();
-            PreparedStatement stm = connection.prepareStatement("INSERT INTO Patient (image,name, id_number,passport_number,birthday,age,gender,height,weight,address,email,note) VALUES ( ?,?,?,?,?,?,?,?,?,?,?,?)");
+            PreparedStatement stm = connection.prepareStatement("INSERT INTO Patient (name, id_number,passport_number,birthday,gender,address,email,note) VALUES ( ?,?,?,?,?,?,?,?)");
             stm.setString(1,name);
             stm.setString(2,idNumber);
             stm.setString(3,passportNumber);
@@ -58,6 +59,17 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
             stm.setString(7,email);
             stm.setString(8,note);
             stm.executeUpdate();
+
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery("SELECT LAST_INSERT_ID() FROM Patient");
+            resultSet.next();
+            int patientNumber = resultSet.getInt(1);
+            for (String contactNumber : contactNumbers) {
+                PreparedStatement preparedStatement = connection.prepareStatement("INSERT INTO Contacts (patient_number,contact_number) VALUES (?,?)");
+                preparedStatement.setInt(1,patientNumber);
+                preparedStatement.setString(2,contactNumber);
+                preparedStatement.executeUpdate();
+            }
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -107,6 +119,22 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     }
 
     @Override
+    public List<String> getContactList(int patientNumber) {
+        List<String> contactList = new ArrayList<>();
+        try {
+            String sql = String.format("SELECT * FROM Contacts WHERE patient_number= %s",patientNumber);
+            ResultSet resultSet = connection.createStatement().executeQuery(sql);
+            while (resultSet.next()){
+                contactList.add(resultSet.getString("contact_number"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        if (contactList.size()==0) contactList.add("");
+        return contactList;
+    }
+
+    @Override
     public ResultSet searchPatientsIdNumber(int number) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE patient_number = %s", "'"+number+"%'"));
@@ -115,19 +143,5 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
             e.printStackTrace();
         }
         return null;
-    }
-
-    @Override
-    public int lastPatientID() {
-        try {
-            String sql = "SELECT * FROM Patient ORDER BY patient_Number DESC LIMIT 1";
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery(sql);
-            resultSet.next();
-            return resultSet.getInt("name");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
     }
 }

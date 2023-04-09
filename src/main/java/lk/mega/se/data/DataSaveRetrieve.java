@@ -5,6 +5,7 @@ import javafx.scene.image.Image;
 import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.List;
 
 public interface DataSaveRetrieve {
     void generateTables();
@@ -14,6 +15,6 @@ public interface DataSaveRetrieve {
     public ResultSet searchPatientsIdNumber(String searchingWord);
     public ResultSet searchPatientsPassportNumber(String searchingWord);
     public void deletePatient(int patientNumber);
-    public int lastPatientID();
+    List<String> getContactList(int patientNumber);
 }
 

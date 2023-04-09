@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class Service implements Serializable {
+    private String invoiceNo = "";
     private String service;
     private int qty;
     private LocalDate serviceDate;
@@ -15,12 +16,21 @@ public class Service implements Serializable {
     public Service() {
     }
 
-    public Service(String service, int qty, LocalDate serviceDate, LocalTime serviceTime, Double cost) {
+    public Service(String invoiceNo, String service, int qty, LocalDate serviceDate, LocalTime serviceTime, Double cost) {
+        this.invoiceNo = invoiceNo;
         this.service = service;
         this.qty = qty;
         this.serviceDate = serviceDate;
         this.serviceTime = serviceTime;
         this.cost = cost;
+    }
+
+    public String getInvoiceNo() {
+        return invoiceNo;
+    }
+
+    public void setInvoiceNo(String invoiceNo) {
+        this.invoiceNo = invoiceNo;
     }
 
     public Double getCost() {

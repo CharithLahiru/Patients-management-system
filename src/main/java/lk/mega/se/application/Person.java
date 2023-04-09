@@ -1,9 +1,8 @@
 package lk.mega.se.application;
 
-import javafx.scene.image.ImageView;
-
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Person implements Serializable {
     private String name;
@@ -12,11 +11,11 @@ public class Person implements Serializable {
     private LocalDate birthday;
     private int age;
     private Gender gender;
-    private String contactNumber;
+    private List<String> contactNumber;
     private String address;
     private String email;
 
-    public Person(String name, String idNumber, String passportNumber, LocalDate birthday, int age, Gender gender, String contactNumber, String address, String email) {
+    public Person(String name, String idNumber, String passportNumber, LocalDate birthday, int age, Gender gender, List<String> contactNumber, String address, String email) {
         this.name = name;
         this.idNumber = idNumber;
         this.passportNumber = passportNumber;
@@ -46,11 +45,11 @@ public class Person implements Serializable {
         this.birthday = birthday;
     }
 
-    public String getContactNumber() {
+    public List<String> getContactNumber() {
         return contactNumber;
     }
 
-    public void setContactNumber(String contactNumber) {
+    public void setContactNumber(List<String> contactNumber) {
         this.contactNumber = contactNumber;
     }
 

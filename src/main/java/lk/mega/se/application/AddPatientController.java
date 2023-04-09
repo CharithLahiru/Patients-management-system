@@ -1,8 +1,11 @@
 package lk.mega.se.application;
 
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -11,14 +14,18 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javafx.util.Callback;
 import lk.mega.se.data.BillDB;
 import lk.mega.se.data.BillDBImpl;
 import lk.mega.se.data.DataSaveRetrieve;
 import lk.mega.se.data.DataSaveRetrieveImpl;
+import lk.mega.se.report.PrintReport;
+import lk.mega.se.report.PrintReportImplement;
 
 import javax.swing.*;
 import java.io.File;
+import java.io.IOException;
 import java.sql.Blob;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -60,6 +67,9 @@ public class AddPatientController {
     public Button btnServiceAdd;
     public AnchorPane anchorPaneBill;
     public AnchorPane anchorPanePatient;
+    public TextField txtSchInvoice;
+    public Label lblInvalidInvoice;
+    public Button btnViewHistory;
     @FXML
     private Button btnSave;
 
@@ -91,6 +101,7 @@ public class AddPatientController {
     private TextField txtPhoneNumber;
 
     private DataSaveRetrieve dataSaveRetrieve = new DataSaveRetrieveImpl();
+    private PrintReport printReport = new PrintReportImplement();
     private BillDB billData = new BillDBImpl();
     private boolean isValidate;
     private TextField[] textFields;
@@ -131,11 +142,12 @@ public class AddPatientController {
         searchService();
         searchTime();
 
-        tblService.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("service"));
-        tblService.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("qty"));
-        tblService.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("serviceDate"));
-        tblService.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("serviceTime"));
-        tblService.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("cost"));
+        tblService.getColumns().get(0).setCellValueFactory(new PropertyValueFactory<>("invoiceNo"));
+        tblService.getColumns().get(1).setCellValueFactory(new PropertyValueFactory<>("service"));
+        tblService.getColumns().get(2).setCellValueFactory(new PropertyValueFactory<>("qty"));
+        tblService.getColumns().get(3).setCellValueFactory(new PropertyValueFactory<>("serviceDate"));
+        tblService.getColumns().get(4).setCellValueFactory(new PropertyValueFactory<>("serviceTime"));
+        tblService.getColumns().get(5).setCellValueFactory(new PropertyValueFactory<>("cost"));
 
         setDatePickerRange();
         tblService.getSelectionModel().selectedItemProperty().addListener((observableValue, previous, current) -> {
@@ -366,17 +378,38 @@ public class AddPatientController {
         txtNote.clear();
 
         btnAddBill.setDisable(true);
+        btnViewHistory.setDisable(true);
         btnDelete.setDisable(true);
         cmbName.requestFocus();
     }
 
     @FXML
     void btnAddBillOnAction(ActionEvent event) {
-        btnNew.setDisable(true);
         btnSave.setDisable(true);
         btnDelete.setDisable(true);
         anchorPaneBill.setDisable(false);
         btnAddBill.setDisable(true);
+        btnViewHistory.setDisable(true);
+        btnViewHistory.setDisable(true);
+    }
+
+    public void btnViewHistoryOnAction(ActionEvent actionEvent) {
+        Stage primaryStage = new Stage();
+//        Stage primaryStage = (Stage) btnViewHistory.getScene().getWindow();
+        try {
+            PatientHistoryController patientHistoryController = new PatientHistoryController();
+            patientHistoryController.patientId=getPatientId();
+            primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/view/PatientHistory.fxml"))));
+            primaryStage.centerOnScreen();
+            primaryStage.show();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private int getPatientId(){
+        return Integer.parseInt(txtPatientNumber.getEditor().getText().substring(1));
     }
 
     public void btnAddOnAction(ActionEvent actionEvent) {
@@ -457,9 +490,13 @@ public class AddPatientController {
             Period period = Period.between(localDate, LocalDate.now());
             patient.setAge(period.getYears());
             patient.setAddress(resultSet.getString("address"));
-            patient.setContactNumber(txtPhoneNumber.getText());                 //todo: update contact list
+            lstContactNumbers.getItems().clear();
+            for (String patientNumber : dataSaveRetrieve.getContactList(resultSet.getInt("patient_number"))) {
+                lstContactNumbers.getItems().add(patientNumber);
+            }
             patient.setEmail(resultSet.getString("email"));
             patient.setNote(resultSet.getString("note"));
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -520,10 +557,14 @@ public class AddPatientController {
         gender.selectToggle((patient.getGender() == Gender.MALE) ? tglMale : tglFemale);
         txtAge.setText(patient.getAge() + "");
         txtAddress.setText(patient.getAddress());
-        txtPhoneNumber.setText(patient.getContactNumber());
         txtEmail.setText(patient.getEmail());
         txtNote.setText(patient.getNote());
+        //contact data set in setdata
     }
+    public void txtSchInvoiceOnKeyReleased(KeyEvent event){
+
+    }
+
     @FXML
     void tXtPhoneNumberOnKeyReleased(KeyEvent event) {
         if (event.getCode() == KeyCode.ENTER) {
@@ -597,7 +638,6 @@ public class AddPatientController {
         cmbPassportNumber.getEditor().setEditable(tru);
         txtBirthday.setEditable(tru);
         txtBirthday.setEditable(tru);
-        txtAge.setEditable(tru);
         tglFemale.setDisable(!tru);
         tglMale.setDisable(!tru);
         txtAddress.setEditable(tru);
@@ -609,8 +649,8 @@ public class AddPatientController {
         btnDelete.setDisable(tru);
         btnSave.setText(tru==false? "Edit":"Save");
         btnAddBill.setDisable(tru);
+        btnViewHistory.setDisable(tru);
     }
-
     public void cmbPassportNumberOnKeyReleased(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             if (patients.isEmpty()){
@@ -629,8 +669,8 @@ public class AddPatientController {
         }
 
     }
-    // focused on bill detail bellow
 
+    // focused on bill detail bellow
     public void btnServiceAddOnAction(ActionEvent actionEvent) {
         if (!isValidServiceData()) return;
         Service service = new Service();
@@ -648,6 +688,7 @@ public class AddPatientController {
         cmbServiceTime.getEditor().clear();
 
     }
+
     private LocalTime getLocalTimeFromCmb(){
         LocalTime localTime = null;
         try {
@@ -709,13 +750,39 @@ public class AddPatientController {
         tblService.getItems().clear();
         btnNew.setDisable(false);
         btnAddBill.setDisable(false);
+        btnViewHistory.setDisable(false);
         btnSave.setDisable(false);
         btnDelete.setDisable(false);
         anchorPaneBill.setDisable(true);
     }
 
     public void btnPrintOnAction(ActionEvent actionEvent) {
+        printReport.printJasperReport();
 
+        for (Service service : tblService.getItems()) {
+            if (service.getInvoiceNo()!="") continue;
+            updateServiceDatabase(service);
+        }
+
+    }
+
+    private void printUnitBill(Service service){
+
+    }
+
+    private void updateServiceDatabase(Service service){
+        String paymentMethodSelection = (paymentMethod.getSelectedToggle() == rdoCard)? "Card":"Cash";
+        billData.updateBillDB(Integer.parseInt(txtPatientNumber.getEditor().getText().substring(1)),
+                LocalDate.now(),
+                service.getService(),
+                service.getQty(),
+                paymentMethodSelection,
+                Double.parseDouble(txtDiscount.getText()),
+                Double.parseDouble(txtTax.getText()),
+                service.getServiceDate(),
+                service.getServiceTime(),
+                Double.parseDouble(lblServiceTotal.getText().substring(2)),
+                Double.parseDouble(lblFinalTotal.getText().substring(2)));
     }
 
     public void rdoPaymentMethodOnAction(ActionEvent actionEvent) {
@@ -726,4 +793,5 @@ public class AddPatientController {
         }
         calculateTotalCost();
     }
+
 }
