@@ -757,17 +757,27 @@ public class AddPatientController {
     }
 
     public void btnPrintOnAction(ActionEvent actionEvent) {
-        printReport.printJasperReport();
-
+        int count = 0;
         for (Service service : tblService.getItems()) {
-            if (service.getInvoiceNo()!="") continue;
+            if (service.getInvoiceNo() != "") continue;
             updateServiceDatabase(service);
+
+            printReport.printJasperReport(LocalDate.now().toString(),
+                    "456456985",
+                    cmbName.getEditor().getText(),
+                    lstContactNumbers.getItems().get(0),
+                    txtAddress.getText(),
+                    (paymentMethod.getSelectedToggle() == rdoCard) ? "Cars" : "Cash",
+                    txtDiscount.getText(),
+                    txtTax.getText(),
+                    lblFinalTotal.getText(),
+                    service.getService(),
+                    String.valueOf(service.getQty()),
+                    service.getServiceDate().toString(),
+                    service.getServiceTime().toString(),
+                    service.getCost().toString()
+                    );
         }
-
-    }
-
-    private void printUnitBill(Service service){
-
     }
 
     private void updateServiceDatabase(Service service){
