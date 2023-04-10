@@ -36,7 +36,7 @@
                   <HBox prefHeight="24.0" prefWidth="388.0">
                      <children>
                         <Label minWidth="120.0" text="Name" />
-                        <ComboBox fx:id="cmbName" editable="true" onKeyReleased="#cmbNameOnKeyReleased" prefHeight="24.0" prefWidth="378.0" promptText="Enter patient name to search" />
+                        <ComboBox fx:id="cmbName" editable="true" onKeyPressed="#cmbNameOnKeyPressed" onKeyReleased="#cmbNameOnKeyReleased" onKeyTyped="#cmbNameOnKeyTyped" prefHeight="24.0" prefWidth="378.0" promptText="Enter patient name to search" />
                      </children>
                   </HBox>
                   <HBox layoutX="10.0" layoutY="44.0" prefHeight="24.0" prefWidth="388.0">
