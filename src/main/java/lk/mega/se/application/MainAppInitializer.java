@@ -38,6 +38,7 @@ public class MainAppInitializer extends Application {
         primaryStage.setScene( new Scene(FXMLLoader.load(getClass().getResource("/view/AddPatient.fxml"))));
         primaryStage.setTitle("Patients Details");
         primaryStage.centerOnScreen();
+        primaryStage.setMaximized(true);
         primaryStage.show();
     }
 

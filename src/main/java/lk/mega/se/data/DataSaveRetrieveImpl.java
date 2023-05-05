@@ -135,6 +135,19 @@ public class DataSaveRetrieveImpl implements DataSaveRetrieve {
     }
 
     @Override
+    public ResultSet searchInvoiceNumber(String invoiceNumber) {
+        String sql = String.format("SELECT * FROM Invoice WHERE invoice_number= %s",invoiceNumber);
+        try {
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return resultSet;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    @Override
     public ResultSet searchPatientsIdNumber(int number) {
         try {
             PreparedStatement preparedStatement = connection.prepareStatement(String.format("SELECT * FROM Patient WHERE patient_number = %s", "'"+number+"%'"));

@@ -16,5 +16,6 @@ public interface DataSaveRetrieve {
     public ResultSet searchPatientsPassportNumber(String searchingWord);
     public void deletePatient(int patientNumber);
     List<String> getContactList(int patientNumber);
+    ResultSet searchInvoiceNumber(String invoiceNumber);
 }
 

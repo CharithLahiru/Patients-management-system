@@ -13,6 +13,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Callback;
@@ -34,6 +36,8 @@ import java.time.LocalTime;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.lowagie.text.pdf.PdfFileSpecification.url;
 
 public class AddPatientController {
 
@@ -70,6 +74,8 @@ public class AddPatientController {
     public TextField txtSchInvoice;
     public Label lblInvalidInvoice;
     public Button btnViewHistory;
+    public AnchorPane bg1;
+    public AnchorPane bg2;
     @FXML
     private Button btnSave;
 
@@ -338,6 +344,24 @@ public class AddPatientController {
     }
 
 
+    public void txtSchInvoiceOnKeyReleased(KeyEvent event){
+        if (event.getCode()==KeyCode.ENTER){
+
+            ResultSet resultSetInvoice = dataSaveRetrieve.searchInvoiceNumber(txtSchInvoice.getText());
+            if (resultSetInvoice==null) return;
+            try {
+                resultSetInvoice.next();
+                int patientNumber = resultSetInvoice.getInt("patient_number");
+                ResultSet resultSetPatient = dataSaveRetrieve.searchPatientsIdNumber(patientNumber);
+                Patient patient = patientSetDataFromDB(resultSetPatient);
+                patientGetData(patient);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
     public void btnNewOnAction(ActionEvent actionEvent) {
         editablePatientEdit(true);
         for (TextField textField : textFields) {
@@ -370,6 +394,10 @@ public class AddPatientController {
         btnAddBill.setDisable(true);
         btnViewHistory.setDisable(true);
         btnViewHistory.setDisable(true);
+        bg1.setBackground(null);
+        bg1.setDisable(true);
+        bg2.setBackground(null);
+        bg2.setDisable(true);
     }
 
     public void btnViewHistoryOnAction(ActionEvent actionEvent) {
@@ -380,6 +408,7 @@ public class AddPatientController {
             primaryStage.setScene(new Scene(FXMLLoader.load(getClass().getResource("/view/PatientHistory.fxml"))));
             primaryStage.centerOnScreen();
             primaryStage.show();
+            primaryStage.setMaximized(true);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -465,6 +494,8 @@ public class AddPatientController {
             patient.setPassportNumber(resultSet.getString("passport_number"));
             LocalDate localDate = resultSet.getDate("birthday").toLocalDate();
             patient.setBirthday(localDate);
+            Gender gender1 = (resultSet.getString("gender").equals("Male"))? (Gender.MALE):(Gender.FEMALE);
+            patient.setGender(gender1);
             Period period = Period.between(localDate, LocalDate.now());
             patient.setAge(period.getYears());
             patient.setAddress(resultSet.getString("address"));
@@ -521,7 +552,6 @@ public class AddPatientController {
             txtPhoneNumber.requestFocus();
         }
     }
-
     private void patientGetData(Patient patient) {
         txtPatientNumber.setValue(patient.getPatientNumber());
         cmbName.getEditor().setText(patient.getName());
@@ -539,9 +569,6 @@ public class AddPatientController {
         for (String patientNumber : patient.getContactNumber()) {
             lstContactNumbers.getItems().add(patientNumber);
         }
-
-    }
-    public void txtSchInvoiceOnKeyReleased(KeyEvent event){
 
     }
 
